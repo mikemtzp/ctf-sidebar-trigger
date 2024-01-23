@@ -1,17 +1,20 @@
-import React from 'react';
-import { Paragraph } from '@contentful/f36-components';
+import { Paragraph, Button, Text } from '@contentful/f36-components';
 import { SidebarAppSDK } from '@contentful/app-sdk';
-import { /* useCMA, */ useSDK } from '@contentful/react-apps-toolkit';
+import { useSDK } from '@contentful/react-apps-toolkit';
 
 const Sidebar = () => {
   const sdk = useSDK<SidebarAppSDK>();
-  /*
-     To use the cma, inject it as follows.
-     If it is not needed, you can remove the next line.
-  */
-  // const cma = useCMA();
 
-  return <Paragraph>Hello Sidebar Component (AppId: {sdk.ids.app})</Paragraph>;
+  return (
+    <>
+      <Button variant='primary' isFullWidth>
+        Generate Build
+      </Button>
+      <Paragraph marginBottom='none' marginTop='spacingS'>
+        <Text fontColor='gray700'>(AppId: {sdk.ids.app})</Text>
+      </Paragraph>
+    </>
+  );
 };
 
 export default Sidebar;
