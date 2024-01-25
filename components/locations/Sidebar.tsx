@@ -7,7 +7,6 @@ import { createClient } from 'contentful-management';
 const Sidebar = () => {
   const sdk = useSDK<SidebarAppSDK>();
   const [title, setTitle] = useState(false);
-  const [rawData, setRawData] = useState<any>();
   const entryId = sdk.entry.getSys().id;
 
   // Access Content Management API with credentials
@@ -32,21 +31,6 @@ const Sidebar = () => {
   );
 
   useEffect(() => {
-    // Get current entry data with entryId
-    const fetchData = async () => {
-      try {
-        const data = await cma.entry.get({ entryId });
-        setRawData(data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    // Check if cma.entry and entryId are truthy
-    cma.entry && entryId && fetchData();
-  }, [cma.entry, entryId]);
-
-  useEffect(() => {
     // Listen for changes on the title field
     const detach = sdk.entry.fields.title.onValueChanged((value) => {
       setTitle(value === undefined);
@@ -63,10 +47,14 @@ const Sidebar = () => {
 
   const handleClick = () => {
     cma.entry
-      .update({ entryId }, rawData)
+      .get({ entryId })
       .then((entry) => {
-        console.log(entry);
-        console.log(`Entry ${entry.sys.id} updated.`);
+        console.log('entry', entry.fields);
+        return cma.entry.update({ entryId }, entry);
+      })
+      .then((updatedEntry) => {
+        console.log('updatedEntry', updatedEntry.fields);
+        console.log(`Entry ${updatedEntry.sys.id} updated.`);
       })
       .catch((error) => {
         console.error('Error updating entry:', error);
