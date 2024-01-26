@@ -6,8 +6,10 @@ import { createClient } from 'contentful-management';
 
 const Sidebar = () => {
   const sdk = useSDK<SidebarAppSDK>();
-  const [title, setTitle] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const entryId = sdk.entry.getSys().id;
+  const isPublished = sdk.entry.getSys().publishedCounter !== 0;
 
   // Access Content Management API with credentials
   const cma = useMemo(
@@ -31,14 +33,33 @@ const Sidebar = () => {
   );
 
   useEffect(() => {
-    // Listen for changes on the title field
-    const detach = sdk.entry.fields.title.onValueChanged((value) => {
-      setTitle(value === undefined);
+    // Listen for changes on the field
+    const detach = sdk.entry.fields.title.onValueChanged(() => {
+      setIsDisabled(true);
+      isPublished ? setIsLoading(false) : setIsLoading(true);
+
+      // Ensure field is auto saved (CTF triggers auto-save every 5 seconds)
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 6000);
     });
 
     // Clean up the listener when the component is unmounted
     return () => detach();
-  }, [sdk.entry.fields.title]);
+  }, [sdk.entry.fields.title, isPublished]);
+
+  useEffect(() => {
+    const detach = sdk.entry.fields.permalink.onValueChanged((value) => {
+      setIsDisabled(!value);
+      isPublished ? setIsLoading(false) : setIsLoading(true);
+
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 6000);
+    });
+
+    return () => detach();
+  }, [sdk.entry.fields.permalink, isPublished]);
 
   useEffect(() => {
     // Ensure field resizes automatically
@@ -49,11 +70,9 @@ const Sidebar = () => {
     cma.entry
       .get({ entryId })
       .then((entry) => {
-        console.log('entry', entry.fields);
         return cma.entry.update({ entryId }, entry);
       })
       .then((updatedEntry) => {
-        console.log('updatedEntry', updatedEntry.fields);
         console.log(`Entry ${updatedEntry.sys.id} updated.`);
       })
       .catch((error) => {
@@ -67,15 +86,20 @@ const Sidebar = () => {
         variant='secondary'
         isFullWidth
         onClick={handleClick}
-        isDisabled={title}
+        isDisabled={isPublished || isDisabled}
+        isLoading={isLoading}
       >
         Start Build
       </Button>
-      <Paragraph marginBottom='none' marginTop='spacingS'>
-        <Text fontColor='gray700'>
-          Click and wait 15 min to preview Draft articles.
-        </Text>
-      </Paragraph>
+
+      {!isPublished && (
+        <Paragraph marginBottom='none' marginTop='spacingS'>
+          <Text fontColor='gray700'>
+            Use for new entries or when &apos;permalink&apos; changes. Wait 15
+            min to see in Live Preview.
+          </Text>
+        </Paragraph>
+      )}
     </>
   );
 };
