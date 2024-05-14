@@ -15,7 +15,7 @@ npm init contentful-app -- --example nextjs
 yarn create contentful-app --example nextjs
 ```
 
-## Available Scripts
+## Available Scripts...
 
 In the project directory, you can run:
 
